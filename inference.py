@@ -2,8 +2,17 @@ import time
 import numpy as np
 from ultralytics import YOLO
 
-# 1. 서버가 켜질 때 모델을 한 번만 메모리에 올림.
-model = YOLO("yolo11n.pt") 
+# 1. 서버 구동 시 모델 로드 및 웜업(예열)
+# 주의: 백엔드 A가 서버를 돌릴 때 이 경로에 best.pt를 둬야 합니다.
+MODEL_PATH = "weights/best.pt" 
+
+print("⏳ AI 모델을 메모리에 올리고 예열을 시작합니다...")
+model = YOLO(MODEL_PATH)
+
+# 더미 데이터로 1회 헛돌게 하여 첫 추론 지연(Cold Start) 방지
+dummy_frame = np.zeros((640, 640, 3), dtype=np.uint8)
+model.predict(source=dummy_frame, imgsz=640, verbose=False)
+print("✅ AI 모델 로드 및 예열 완료 (준실시간 추론 준비됨)")
 
 # 2. 백엔드 로직에 넘길 최소 신뢰도 (40% 이상만 포트홀로 취급)
 CONF_THRESHOLD = 0.4 
